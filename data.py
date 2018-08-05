@@ -30,16 +30,17 @@ def load_labels(filename, perm):
 
 def load_images(filename, perm):
     images = list()
+    x = 0
     with gzip.open(filename, 'rb') as f:
         b = f.read()
         offset = 16
         n = 28
-        for k in perm + offset:
+        for k in perm:
             image = list()
             for i in range(n):
                 row = list()
                 for j in range(n):
-                    val = b[(k*n**2) + (i*n) + j]
+                    val = b[(k*n*n) + (i*n) + j + offset]
                     row.append(val)
                 image.append(row)
             images.append(image)

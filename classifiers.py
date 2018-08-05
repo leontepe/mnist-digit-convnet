@@ -4,6 +4,8 @@ class ConvolutionalNeuralNetwork:
         pass
 
     def fit(self, X, y):
+        
+
         pass
 
     
