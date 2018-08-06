@@ -7,12 +7,13 @@ import numpy as np
 def main():
     random.seed(42)
     X_train, y_train = data.load_train('data', 0.01) # reduce dataset size for debugging purposes
-    display_image(X_train[random.randrange(len(X_train))])
+    sample(X_train, y_train)
 
-def display_image(data):
-    #data = np.array(data)
+def sample(X, y):
+    index = random.randrange(len(X))
     plt.gray()
-    plt.imshow(data)
+    plt.imshow(X[index])
+    plt.title('Label: %d' % (y[index]))
     plt.show()
 
 if __name__ == '__main__':

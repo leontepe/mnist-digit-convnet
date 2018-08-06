@@ -20,12 +20,13 @@ def load_test(path, percentage=1.0): # first 5000 of test set are easier than la
     return X_test, y_test
 
 def load_labels(filename, perm):
-    labels = list()
+    labels = np.empty((len(perm)))
     with gzip.open(filename, 'rb') as f:
         b = f.read()
         offset = 8
-        for i in perm + offset:
-            labels.append(b[i])
+        for i in range(len(perm)):
+            k = perm[i]
+            labels[i] = b[k+offset]
     return labels
 
 def load_images(filename, perm):
