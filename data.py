@@ -5,39 +5,59 @@ import os.path
 import numpy as np
 import math
 
-def load_train(path, percentage=1.0):
+def load_train(path, ravel=False, percentage=1.0, shuffle=True):
     m = 60000
-    perm = np.random.permutation(m)[0:int(math.floor(percentage*m))]
-    X_train = load_images(os.path.join(path, 'train-images-idx3-ubyte.gz'), perm)
-    y_train = load_labels(os.path.join(path, 'train-labels-idx1-ubyte.gz'), perm)
-    return np.array(X_train), np.array(y_train)
+    u = int(math.floor(percentage*m))
+    perm = np.random.permutation(m)[0:u] if shuffle else np.arange(u)
 
-def load_test(path, percentage=1.0): # first 5000 of test set are easier than last 5000
+    X_train = load_images(os.path.join(path, 'train-images-idx3-ubyte.gz'), perm, ravel)
+    y_train = load_labels(os.path.join(path, 'train-labels-idx1-ubyte.gz'), perm)
+
+    return X_train, y_train
+
+def load_test(path, ravel=False, percentage=1.0, shuffle=True): # first 5000 of test set are easier than last 5000
     m = 10000
-    perm = np.random.permutation(m)[0:int(math.floor(percentage*m))]
-    X_test = load_images(os.path.join(path, 't10k-images-idx3-ubyte.gz'), perm)
-    y_test = load_labels(os.path.join(path, 't10k-labels-idx1-ubyte.gz'), perm)
+    u = int(math.floor(percentage*m))
+    perm = np.random.permutation(m)[0:u] if shuffle else np.arange(u)
+
+    X_test = load_images(os.path.join(path, 'train-images-idx3-ubyte.gz'), perm, ravel)
+    y_test = load_labels(os.path.join(path, 'train-labels-idx1-ubyte.gz'), perm)
+
     return X_test, y_test
 
 def load_labels(filename, perm):
     labels = np.empty((len(perm)))
     with gzip.open(filename, 'rb') as f:
-        b = f.read()
         offset = 8
+        b = f.read()
         for i in range(len(perm)):
+            labels_padded = np.zeros((10))
             k = perm[i]
-            labels[i] = b[k+offset]
+            y = b[k+offset]
+            labels_padded[y] = 1
+            labels[i] = labels_padded
     return labels
 
-def load_images(filename, perm):
-    len_side = 28
-    images = np.empty((len(perm), len_side, len_side))
+def load_images(filename, perm, ravel):
+    n = 28 # image side length
+    m = len(perm) # number of rows in data
+    
     with gzip.open(filename, 'rb') as f:
-        b = f.read()
         offset = 16
-        for p in range(len(perm)):
-            k = perm[p]
-            for i in range(len_side):
-                for j in range(len_side):
-                    images[p][i][j] = b[(k*len_side**2) + (i*len_side) + j + offset]
-    return images
+        b = f.read()
+        if ravel:
+            images = np.empty((m, n*n))
+            for i in range(m):
+                k = perm[i]
+                for j in range(n*n):
+                    p = k*n*n + offset + j
+                    images[i, j] = b[p]
+            return images
+        else:
+            images = np.empty((m, n, n))
+            for p in range(m):
+                k = perm[p]
+                for i in range(n):
+                    for j in range(n):
+                        images[p][i][j] = b[(k*n*n) + (i*n) + j + offset]
+            return images

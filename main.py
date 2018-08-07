@@ -1,19 +1,20 @@
 import random
 import data
-from classifiers import ConvolutionalNeuralNetwork as CNN
+from classifiers import NeuralNetwork as NN
 import matplotlib.pyplot as plt
 import numpy as np
 
 def main():
     random.seed(42)
-    X_train, y_train = data.load_train('data', 0.01) # reduce dataset size for debugging purposes
-    sample(X_train, y_train)
+    X_train, y_train = data.load_train('data', ravel=True, percentage=0.01, shuffle=True)
+    sample(X_train, y_train, unravel=True)
 
-def sample(X, y):
+def sample(X, y, unravel):
     index = random.randrange(len(X))
+    data = (X[index, :]).reshape((28, 28)) if unravel else X[index]
     plt.gray()
-    plt.imshow(X[index])
-    plt.title('Label: %d' % (y[index]))
+    plt.imshow(data)
+    plt.title('Label: %d' % (np.argmax(y[index])))
     plt.show()
 
 if __name__ == '__main__':
