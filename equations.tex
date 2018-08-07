@@ -1,0 +1,27 @@
+\documentclass{article}
+\usepackage{amsmath}
+
+\title{Backpropagation Equations}
+\author{Leon Tepe}
+\date{}
+
+\begin{document}
+    \maketitle
+
+    \section{Component form}
+
+    \section{Matrix form}
+    \begin{equation}
+        \delta^{L} = \nabla_a C \odot \sigma' (z^{L})
+    \end{equation}
+    \begin{equation}
+        \delta^l = ((w^{l+1})^T \delta^{l+1}) \odot \sigma'(z^l)
+    \end{equation}
+    \begin{equation}
+        \frac{\partial C}{\partial b_j^l} = \delta_j^l
+    \end{equation}
+    \begin{equation}
+        \frac{\partial C}{\partial w^l_{jk}} = a_k^{l-1} \delta_j^l
+    \end{equation}
+
+\end{document}
