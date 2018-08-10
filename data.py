@@ -5,59 +5,69 @@ import os.path
 import numpy as np
 import math
 
-def load_train(path, ravel=False, percentage=1.0, shuffle=True):
-    m = 60000
-    u = int(math.floor(percentage*m))
-    perm = np.random.permutation(m)[0:u] if shuffle else np.arange(u)
+def load_train(path):
+    X_train = load_images(os.path.join(path, 'train-images-idx3-ubyte.gz'))
+    y_train = load_labels(os.path.join(path, 'train-labels-idx1-ubyte.gz'))
+    return merge(X_train, y_train)
 
-    X_train = load_images(os.path.join(path, 'train-images-idx3-ubyte.gz'), perm, ravel)
-    y_train = load_labels(os.path.join(path, 'train-labels-idx1-ubyte.gz'), perm)
+def load_test(path):
+    X_train = load_images(os.path.join(path, 't10k-images-idx3-ubyte.gz'))
+    y_train = load_labels(os.path.join(path, 't10k-labels-idx1-ubyte.gz'))
+    return merge(X_train, y_train)
+    
+def load_images(filename):
+    images = []
+    offset = 16
+    num_pixels = 28*28
+    with gzip.open(filename, 'r') as f:
+        content = f.read()
+        num_rows = int((len(content) - offset) / num_pixels)
+        #printProgressBar(0, num_rows, 'Loading images:')
+        for i in range(num_rows):
+            # index of first pixel
+            k = i*num_pixels + offset
+            # create n by 1 vector of pixels
+            img = np.reshape(list(content[k:k+num_pixels]), (num_pixels, 1))
+            # append image to image list
+            images.append(img)
+            #printProgressBar(i, num_rows, 'Loading images:')
+    #print()
+    return images
 
-    return X_train, y_train
-
-def load_test(path, ravel=False, percentage=1.0, shuffle=True): # first 5000 of test set are easier than last 5000
-    m = 10000
-    u = int(math.floor(percentage*m))
-    perm = np.random.permutation(m)[0:u] if shuffle else np.arange(u)
-
-    X_test = load_images(os.path.join(path, 'train-images-idx3-ubyte.gz'), perm, ravel)
-    y_test = load_labels(os.path.join(path, 'train-labels-idx1-ubyte.gz'), perm)
-
-    return X_test, y_test
-
-def load_labels(filename, perm):
-    labels = np.empty((len(perm)))
-    with gzip.open(filename, 'rb') as f:
-        offset = 8
-        b = f.read()
-        for i in range(len(perm)):
-            labels_padded = np.zeros((10))
-            k = perm[i]
-            y = b[k+offset]
-            labels_padded[y] = 1
-            labels[i] = labels_padded
+def load_labels(filename):
+    labels = []
+    offset = 8
+    with gzip.open(filename, 'r') as f:
+        content = f.read()
+        num_rows = len(content) - offset
+        #printProgressBar(0, num_rows, 'Loading labels:')
+        for i in range(num_rows):
+            y = content[offset+i]
+            labels.append(np.array([i==y for i in range(10)]).reshape((10, 1)))
+            #printProgressBar(i, num_rows, 'Loading labels:')
+    #print()
     return labels
 
-def load_images(filename, perm, ravel):
-    n = 28 # image side length
-    m = len(perm) # number of rows in data
-    
-    with gzip.open(filename, 'rb') as f:
-        offset = 16
-        b = f.read()
-        if ravel:
-            images = np.empty((m, n*n))
-            for i in range(m):
-                k = perm[i]
-                for j in range(n*n):
-                    p = k*n*n + offset + j
-                    images[i, j] = b[p]
-            return images
-        else:
-            images = np.empty((m, n, n))
-            for p in range(m):
-                k = perm[p]
-                for i in range(n):
-                    for j in range(n):
-                        images[p][i][j] = b[(k*n*n) + (i*n) + j + offset]
-            return images
+def merge(X, y):
+    return [(X, y) for X, y in zip(X, y)]
+
+# Print iterations progress
+def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█'):
+    """
+    Call in a loop to create terminal progress bar
+    @params:
+        iteration   - Required  : current iteration (Int)
+        total       - Required  : total iterations (Int)
+        prefix      - Optional  : prefix string (Str)
+        suffix      - Optional  : suffix string (Str)
+        decimals    - Optional  : positive number of decimals in percent complete (Int)
+        length      - Optional  : character length of bar (Int)
+        fill        - Optional  : bar fill character (Str)
+    """
+    percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
+    filledLength = int(length * iteration // total)
+    bar = fill * filledLength + '-' * (length - filledLength)
+    print('\r%s |%s| %s%% %s' % (prefix, bar, percent, suffix), end = '\r')
+    # Print New Line on Complete
+    if iteration == total: 
+        print()

@@ -1,25 +1,39 @@
-import random
-import data
-from classifiers import NeuralNetwork as NN
 import matplotlib.pyplot as plt
 import numpy as np
+import random
+import data
+import neural_network
+import sys
+import time
 
 def main():
-    #random.seed(42)
-    #X_train, y_train = data.load_train('data', ravel=True, percentage=0.01, shuffle=True)
-    #sample(X_train, y_train, unravel=True)
 
-    a = np.array([1, 2, 3, 2, 2, 2, 4])
-    b = np.array([0, 1, 4, 3, 2, 0, 1])
+    print('Loading training data...')
+    start = time.time()
+    training_data = data.load_train('data')
+    end = time.time()
+    print('Time elapsed: %.2fs' % (round(end-start, 2)))
+    
+    print('Loading test data...')
+    start = time.time()
+    test_data = data.load_test('data')
+    end = time.time()
+    print('Time elapsed: %.2fs' % (round(end-start, 2)))
+    
+    print('Initializing model...')
+    model = neural_network.NeuralNetwork((28*28, 30, 10))
+    
+    print('Training model...')
+    start = time.time()
+    model.stochastic_gradient_descent(training_data, test_data, 5, 10, 3)
+    end = time.time()
+    print('Time elapsed: %.2fs' % (round(end-start, 2)))
 
-    print(c)
-
-def sample(X, y, unravel):
-    index = random.randrange(len(X))
-    data = (X[index, :]).reshape((28, 28)) if unravel else X[index]
+def sample(data):
+    X_sample, y_sample = data[random.randrange(len(data))]
     plt.gray()
-    plt.imshow(data)
-    plt.title('Label: %d' % (np.argmax(y[index])))
+    plt.imshow(np.reshape(X_sample, (28, 28)))
+    plt.title('Label: %d' % (np.argmax(y_sample)))
     plt.show()
 
 if __name__ == '__main__':
