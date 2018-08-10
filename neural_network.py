@@ -16,10 +16,6 @@ class NeuralNetwork:
         self.cost = quadratic_cost
 
     def stochastic_gradient_descent(self, training_data, test_data, epochs, mini_batch_size, alpha):
-
-        # combine separate x and y arrays to a list of (x, y) pairs
-        # training_data = [(x, y) for x, y in zip(x_train, y_train)]
-        # test_data = [(x, y) for x, y in zip(x_test, y_test)]
         
         # number of rows in dataset
         m = len(training_data)
@@ -32,7 +28,7 @@ class NeuralNetwork:
             # partition the data into mini-batches
             mini_batches = [training_data[k:k+mini_batch_size] for k in range(0, m, mini_batch_size)]
 
-            # update weigths and biases for each mini-batch
+            # update weights and biases for each mini-batch
             for mini_batch in mini_batches:
                 self.update_mini_batch(mini_batch, alpha)
 
@@ -59,8 +55,9 @@ class NeuralNetwork:
             b_gradient_batch = [bg_b + bg for bg_b, bg in zip(b_gradient_batch, b_gradient)]
 
         # update weights and biases according to learning rate alpha and the computed batch gradient
-        self.weights = [W - np.multiply((alpha/n), W_gradient) for W, W_gradient in zip(self.weights, W_gradient_batch)]
-        self.biases = [b - np.multiply((alpha/n), b_gradient) for b, b_gradient in zip(self.biases, b_gradient_batch)]
+        self.weights = [W - ((alpha/n) * W_gradient) for W, W_gradient in zip(self.weights, W_gradient_batch)]
+        self.biases = [b - ((alpha/n) * b_gradient) for b, b_gradient in zip(self.biases, b_gradient_batch)]
+
 
     def evaluate(self, test_data): # return the number of correctly classified data points
         test_results = [(self.predict(x)==np.argmax(y)) for x, y in test_data]
@@ -102,8 +99,8 @@ class NeuralNetwork:
         
         # propagate error backwards and compute gradients of all preceeding layers
         for l in range(2, self.num_layers):
-            delta = np.multiply(np.dot(self.weights[-l+1].transpose(), delta), self.activation(z_vals[-l], derivative=True))
-            W_gradient[-l] = np.dot(delta, a_vals[-l-1].transpose())
+            delta = np.dot(self.weights[-l+1].T, delta) * self.activation(z_vals[-l], derivative=True)
+            W_gradient[-l] = np.dot(delta, a_vals[-l-1].T)
             b_gradient[-l] = delta
 
         return W_gradient, b_gradient
@@ -111,11 +108,11 @@ class NeuralNetwork:
     def predict(self, x):
         return np.argmax(self.feedforward(x))
 
-def sigmoid(x, derivative=False):
+def sigmoid(z, derivative=False):
     if not derivative:
-        return 1/(1 + np.exp(-x))
+        return 1.0/(1.0 + np.exp(-z))
     else:
-        return np.multiply(sigmoid(x), sigmoid(1-x))
+        return np.multiply(sigmoid(z), sigmoid(1-z))
 
 def quadratic_cost(a, y, derivative=False):
     # sum of squares error

@@ -5,17 +5,20 @@ import os.path
 import numpy as np
 import math
 
-def load_train(path):
-    X_train = load_images(os.path.join(path, 'train-images-idx3-ubyte.gz'))
-    y_train = load_labels(os.path.join(path, 'train-labels-idx1-ubyte.gz'))
+def load_data():
+    return load_train(), load_test()
+
+def load_train():
+    X_train = load_images('data/train-images-idx3-ubyte.gz')
+    y_train = load_labels('data/train-labels-idx1-ubyte.gz')
     return merge(X_train, y_train)
 
-def load_test(path):
-    X_train = load_images(os.path.join(path, 't10k-images-idx3-ubyte.gz'))
-    y_train = load_labels(os.path.join(path, 't10k-labels-idx1-ubyte.gz'))
+def load_test():
+    X_train = load_images('data/t10k-images-idx3-ubyte.gz')
+    y_train = load_labels('data/t10k-labels-idx1-ubyte.gz')
     return merge(X_train, y_train)
     
-def load_images(filename):
+def load_images(filename, do_normalization=True):
     images = []
     offset = 16
     num_pixels = 28*28
@@ -32,7 +35,7 @@ def load_images(filename):
             images.append(img)
             #printProgressBar(i, num_rows, 'Loading images:')
     #print()
-    return images
+    return normalize(images) if do_normalization else images
 
 def load_labels(filename):
     labels = []
@@ -47,6 +50,9 @@ def load_labels(filename):
             #printProgressBar(i, num_rows, 'Loading labels:')
     #print()
     return labels
+
+def normalize(X):
+    return [x/255 for x in X]
 
 def merge(X, y):
     return [(X, y) for X, y in zip(X, y)]
