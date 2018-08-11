@@ -9,16 +9,21 @@ def load_data():
     return load_train(), load_test()
 
 def load_train():
+    """ Returns the MNIST training dataset as a `list` of `(x, y)` tuples. """
     X_train = load_images('data/train-images-idx3-ubyte.gz')
     y_train = load_labels('data/train-labels-idx1-ubyte.gz')
     return merge(X_train, y_train)
 
 def load_test():
+    """ Returns the MNIST test dataset as a `list` of `(x, y)` tuples. """
     X_train = load_images('data/t10k-images-idx3-ubyte.gz')
     y_train = load_labels('data/t10k-labels-idx1-ubyte.gz')
     return merge(X_train, y_train)
     
 def load_images(filename, do_normalization=True):
+    """
+    Returns a `list` of `numpy.ndarray`s of shape `(784,1)` representing the image. Unless specified otherwise, the values will be normalized.
+    """
     images = []
     offset = 16
     num_pixels = 28*28
@@ -38,6 +43,7 @@ def load_images(filename, do_normalization=True):
     return normalize(images) if do_normalization else images
 
 def load_labels(filename):
+    """ Returns a `list` of labels where each one is a `numpy.ndarray` of shape `(10,1)` representing the desired network output. """
     labels = []
     offset = 8
     with gzip.open(filename, 'r') as f:
@@ -51,13 +57,15 @@ def load_labels(filename):
     #print()
     return labels
 
-def normalize(X):
-    return [x/255 for x in X]
+def normalize(x):
+    """ Returns a normalized version of the input image. """
+    return [x/255 for x in x]
 
-def merge(X, y):
-    return [(X, y) for X, y in zip(X, y)]
+def merge(x, y):
+    """ Returns a merged `list` of `(x, y)` tuples from seperate `x` and `y` lists. """
+    return [(x, y) for x, y in zip(x, y)]
 
-# Print iterations progress
+# copied this from some stackoverflow thread
 def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█'):
     """
     Call in a loop to create terminal progress bar
