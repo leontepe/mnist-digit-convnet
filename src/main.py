@@ -2,11 +2,16 @@ import matplotlib.pyplot as plt
 import numpy as np
 import random
 import mnist
-import neural_network
+from neural_network import NeuralNetwork
 import sys
 import time
+import os.path
 
 def main():
+    """ Main entry point of the script. """
+
+    plot_failures = False
+    filename = 'network.json'
 
     print('Loading data...')
     start = time.time()
@@ -14,17 +19,28 @@ def main():
     end = time.time()
     print('Time elapsed: %.2fs' % (round(end-start, 2)))
     
-    print('Initializing model...')
-    model = neural_network.NeuralNetwork([784, 100, 30, 10])
+    if os.path.exists(filename):
+        print('Found an existing model. Deserializing...', end=' ')
+        model = NeuralNetwork.deserialize(filename)
+        print('Finished')
+    else:
+        print('Initializing new model...', end=' ')
+        model = NeuralNetwork([784, 100, 10])
+        print('Finished')
     
     print('Training model...')
     start = time.time()
-    model.stochastic_gradient_descent(training_data, epochs=20, mini_batch_size=20, learning_rate=1e-1, test_data=test_data)
+    model.mini_batch_gradient_descent(training_data, epochs=3, mini_batch_size=10, learning_rate=3, regularization_parameter=1, test_data=test_data)
     end = time.time()
     print('Time elapsed: %.2fs' % (round(end-start, 2)))
 
-    print('Plotting misclassified images...')
-    find_failures(model, test_data)
+    print('Serializing model...', end=' ')
+    model.serialize(filename)
+    print('Finished')
+
+    if plot_failures:
+        print('Plotting misclassified images...')
+        find_failures(model, test_data)
 
 def sample(data):
     """ Plots a sample digit from a dataset. """
