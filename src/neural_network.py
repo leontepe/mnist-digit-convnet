@@ -97,6 +97,12 @@ class NeuralNetwork:
         self.weights = [W - ((learning_rate/mini_batch_size) * W_gradient) - ((learning_rate * regularization_parameter / mini_batch_size) * W) for W, W_gradient in zip(self.weights, W_gradient_batch)]
         self.biases = [b - ((learning_rate/mini_batch_size) * b_gradient) for b, b_gradient in zip(self.biases, b_gradient_batch)]
 
+    def update_weights(self, mini_batch, learning_rate, regularization_parameter):
+
+        # TODO: Implement a weight update method that takes in multiple training examples as a matrix X and computes the gradients in matrix form
+
+        pass
+
     def accuracy(self, test_data):
         """ Returns the prediction accuracy on the given test data. """
         test_results = [(self.predict(x)==np.argmax(y)) for x, y in test_data]
@@ -116,7 +122,7 @@ class NeuralNetwork:
         if not return_vals:
             a = x
             for W, b in zip(self.weights, self.biases):
-                a = self.activation(np.dot(W, a) + b)
+                a = self.activation(np.matmul(W, a) + b)
             return a
             
         else:
@@ -124,7 +130,7 @@ class NeuralNetwork:
             z_vals = []
             a_vals = [x]
             for W, b in zip(self.weights, self.biases):
-                z = np.dot(W, a) + b
+                z = np.matmul(W, a) + b
                 z_vals.append(z)
                 a = self.activation(z)
                 a_vals.append(a)
@@ -144,13 +150,13 @@ class NeuralNetwork:
 
         # Compute first layer of gradients using the derivative of the cost
         delta = self.cost.delta(z_vals[-1], a_vals[-1], y)
-        W_gradient[-1] = np.dot(delta, a_vals[-2].T)
+        W_gradient[-1] = np.matmul(delta, a_vals[-2].T)
         b_gradient[-1] = delta
         
         # Propagate error backwards and compute gradients of all preceeding layers
         for l in range(2, self.num_layers):
-            delta = np.dot(self.weights[-l+1].T, delta) * self.activation(z_vals[-l], derivative=True)
-            W_gradient[-l] = np.dot(delta, a_vals[-l-1].T)
+            delta = np.matmul(self.weights[-l+1].T, delta) * self.activation(z_vals[-l], derivative=True)
+            W_gradient[-l] = np.matmul(delta, a_vals[-l-1].T)
             b_gradient[-l] = delta
 
         return W_gradient, b_gradient

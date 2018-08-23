@@ -6,10 +6,12 @@ from neural_network import NeuralNetwork
 import sys
 import time
 import os.path
+import activations
 
 def main():
     """ Main entry point of the script. """
 
+    """
     plot_failures = False
     filename = 'network.json'
 
@@ -41,6 +43,15 @@ def main():
     if plot_failures:
         print('Plotting misclassified images...')
         find_failures(model, test_data)
+    """
+
+    sigmoid = activations.get('sigmoid')
+    print(sigmoid(0))
+
+    shape1 = (283,)
+    shape2 = (49,)
+    merged = shape1, shape2
+    print(merged[0])
 
 def sample(data):
     """ Plots a sample digit from a dataset. """
