@@ -9,7 +9,7 @@ class NeuralNetwork:
     A module to implement the stochastic gradient descent learning algorithm and the computation of gradients using backpropagation for a fully-connected neural network.
     """
 
-    def __init__(self, layer_sizes, cost=costs.CrossEntropyCost):
+    def __init__(self, layer_sizes, cost=costs.QuadraticCost):
 
         self.layer_sizes = layer_sizes
         self.num_layers = len(layer_sizes)
@@ -20,6 +20,8 @@ class NeuralNetwork:
         # Define activation and cost function
         self.activation = sigmoid
         self.cost = cost
+
+        self.total_epochs = 0
 
     def initialize_weights(self):
         """ Initializes the weights and biases with a Gaussian distribution so that they have a mean of 0 and a standard deviation of the inverse of number of neurons in the previous layer. """
@@ -58,7 +60,7 @@ class NeuralNetwork:
 
             # Update weights and biases for each mini-batch
             for mini_batch in mini_batches:
-                self.update_mini_batch(mini_batch, learning_rate, regularization_parameter)
+                self.update_weights(mini_batch, learning_rate, regularization_parameter)
 
             # Print progress after each epoch
             if test_data:
@@ -66,7 +68,9 @@ class NeuralNetwork:
             else:
                 print('Epoch {0} completed'.format(epoch+1))
 
-    def update_mini_batch(self, mini_batch, learning_rate, regularization_parameter):
+            self.total_epochs += 1
+
+    def update_weights(self, mini_batch, learning_rate, regularization_parameter):
         """
         Updates the weights and biases of the neural network by applying gradient descent to the mini-batch. The regularization method used is L2 regularization.
         
@@ -97,7 +101,7 @@ class NeuralNetwork:
         self.weights = [W - ((learning_rate/mini_batch_size) * W_gradient) - ((learning_rate * regularization_parameter / mini_batch_size) * W) for W, W_gradient in zip(self.weights, W_gradient_batch)]
         self.biases = [b - ((learning_rate/mini_batch_size) * b_gradient) for b, b_gradient in zip(self.biases, b_gradient_batch)]
 
-    def update_weights(self, mini_batch, learning_rate, regularization_parameter):
+    def update_weights_batch(self, mini_batch, learning_rate, regularization_parameter):
 
         # TODO: Implement a weight update method that takes in multiple training examples as a matrix X and computes the gradients in matrix form
 
@@ -136,6 +140,14 @@ class NeuralNetwork:
                 a_vals.append(a)
             return a_vals, z_vals
 
+    def feedforward_batch(self, X):
+        A = X
+        for W, b in zip(self.weights, self.biases):
+            B = np.repeat(b.T, A.shape[0], axis=0)
+            Z = np.matmul(A, W.T) + B
+            A = self.activation(Z)
+        return A
+
     def backprop(self, x, y):
         """
         Returns the gradients of the cost w.r.t. each individual weight given a single `x` and `y` pair by using backpropagation.
@@ -161,18 +173,31 @@ class NeuralNetwork:
 
         return W_gradient, b_gradient
 
+    def backprop_batch(self, X, Y):
+        """
+        Returns the sum of the gradients of the cost w.r.t. each individual weight given a data matrix `X` where each row represents a single training example \
+        and a label matrix `Y` where each row represents the desired network output (ground truth) for the specific training example.
+        """
+
+        # TODO
+
     def predict(self, x):
         """ Returns the predicted label for the input image `x`. """
         return np.argmax(self.feedforward(x))
+
+    def predict_batch(self, X):
+        """ Returns the predicted labels for the input images `X`. """
+        return np.argmax(self.feedforward_batch(X), axis=1)
 
     def serialize(self, filename):
         """ Saves the neural network to the file `filename`. """
 
         # Save data as dictionary
-        data = {"lazer_sizes": self.layer_sizes,
-                "weights": self.weights,
-                "biases": self.biases,
-                "cost": str(self.cost.__name__)}
+        data = {"layer_sizes": self.layer_sizes,
+                "weights": [w.tolist() for w in self.weights],
+                "biases": [b.tolist() for b in self.biases],
+                "cost": str(self.cost.__name__),
+                "total_epochs": self.total_epochs}
 
         # Write dictionary to file as json
         f = open(filename, 'w')
@@ -188,13 +213,18 @@ class NeuralNetwork:
         data = json.load(f)
         f.close()
         
-        # Get cost class
+        # Extract all neural network parameters
+        layer_sizes = data['layer_sizes']
         cost = getattr(sys.modules['costs'], data['cost'])
+        weights = [np.array(w) for w in data['weights']]
+        biases = [np.array(b) for b in data['biases']]
+        total_epochs = data['total_epochs']
 
-        # Intialize a new neural network instance with loaded weights, biases and cost
-        network = NeuralNetwork(data['layer_sizes'], cost)
-        network.weights = data['weights']
-        network.biases = data['biases']
+        # Intialize a new neural network instance with extracted parameters
+        network = NeuralNetwork(layer_sizes, cost)
+        network.weights = weights
+        network.biases = biases
+        network.total_epochs = total_epochs
 
         return network
 
